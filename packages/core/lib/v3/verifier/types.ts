@@ -134,13 +134,15 @@ export type TrajectoryStatus = "complete" | "aborted" | "stalled" | "error";
  * The on-disk layout is one directory per task:
  *
  *   .trajectories/<run-id>/<task-id>/
- *     ├── task_data.json    — TaskSpec + result metadata
- *     ├── trajectory.json   — this object, with screenshotPath instead of bytes
- *     ├── screenshot_1.png  — probeEvidence.screenshot for step 1, etc.
+ *     ├── task_data.json           — TaskSpec + result metadata
+ *     ├── trajectory.json          — this object, with image paths instead of bytes
+ *     ├── screenshots/
+ *     │   ├── probe/<N>.png        — tier-2 probe screenshot per step
+ *     │   └── agent/<N>.png        — tier-1 image the model received per step
  *     ├── scores/
- *     │   └── result.json       — Result from V3Evaluator.verify()
- *     ├── core.log          — captured action log
- *     └── times.json        — step timing + token usage
+ *     │   └── result.json          — Result from V3Evaluator.verify()
+ *     ├── core.log                 — captured action log
+ *     └── times.json               — step timing + token usage
  */
 export interface Trajectory {
   task: TaskSpec;
@@ -305,6 +307,7 @@ export interface VerifierFinding {
 /** Stable debugging summary emitted by verifier backends. */
 export interface VerifierRawSteps {
   backend?: "legacy" | "verifier";
+  reason?: string;
   primaryIntent?: string;
   reasoning?: string;
   rubricSource?: "precomputed" | "generated" | "none";
@@ -323,8 +326,12 @@ export interface VerifierRawSteps {
 export interface TaskValidity {
   /** True if the task is underspecified / has multiple valid interpretations. */
   isAmbiguous: boolean;
+  /** Human-readable ambiguity explanation when available. */
+  ambiguityReason?: string;
   /** True if the task is impossible / illegal / NSFW / otherwise infeasible. */
   isInvalid: boolean;
+  /** Human-readable invalid-task explanation when available. */
+  invalidReason?: string;
   /** Optional sub-codes from the task-classification taxonomy. */
   ambiguityCodes?: string[];
   invalidTaskCodes?: string[];
