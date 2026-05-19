@@ -1363,10 +1363,7 @@ export class RubricVerifier implements Verifier {
       init_url_context: buildInitUrlContext(taskSpec.initUrl),
     });
 
-    const maxAttempts = Math.max(
-      1,
-      readPositiveIntEnv("VERIFIER_RUBRIC_RETRIES", 3),
-    );
+    const maxAttempts = 3;
     let lastError: unknown;
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -1801,7 +1798,6 @@ function filterByTaskSpan(
   taskInstruction: string,
   logger: (line: LogLine) => void,
 ): z.infer<typeof RubricItemSchema>[] {
-  const strict = process.env.VERIFIER_RUBRIC_REQUIRE_TASK_SPAN === "1";
   const normalizedTask = normalizeForSpanMatch(taskInstruction);
   const kept: z.infer<typeof RubricItemSchema>[] = [];
   const dropped: { criterion: string; reason: string }[] = [];
@@ -1809,14 +1805,10 @@ function filterByTaskSpan(
   for (const item of items) {
     const span = item.task_span?.trim();
     if (!span) {
-      if (strict) {
-        dropped.push({
-          criterion: item.criterion,
-          reason: "missing task_span",
-        });
-        continue;
-      }
-      kept.push(item);
+      dropped.push({
+        criterion: item.criterion,
+        reason: "missing task_span",
+      });
       continue;
     }
 
